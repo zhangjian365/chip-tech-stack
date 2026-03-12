@@ -14,6 +14,7 @@
 - [移动端 AI/ML](#移动端-aiml)
 - [Android 底层](#android-底层)
 - [安全与 TrustZone](#安全与-trustzone)
+- [软件架构参考](#软件架构参考)
 - [工具与模拟器](#工具与模拟器)
 - [学习资源](#学习资源)
 
@@ -209,6 +210,120 @@
 
 ---
 
+## 软件架构参考
+
+> 现代化软件项目架构设计参考，虽然不是直接的芯片底层代码，但其设计模式、性能优化策略、跨平台架构对 Kirin 系统设计有重要参考价值。
+
+### OpenClaw - 多通道 AI 网关
+
+| 属性 | 内容 |
+|------|------|
+| **项目** | [openclaw/openclaw](https://github.com/openclaw/openclaw) ⭐ |
+| **版本** | 2026.3.2 |
+| **定位** | Multi-channel AI Gateway (多通道 AI 网关) |
+| **技术栈** | TypeScript/Node.js 22+ |
+| **协议** | MIT |
+
+#### 核心架构
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Client Layer (跨平台)                     │
+│  iOS App │ Android App │ macOS App │ TUI Terminal          │
+└───────────────────────────┬─────────────────────────────────┘
+                            │ ACP Protocol (JSON-RPC over WS)
+┌───────────────────────────┼─────────────────────────────────┐
+│                    Gateway Layer (Node.js)                   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  43 Extensions (Discord/Telegram/Signal/Feishu/...)  │   │
+│  └──────────────────────────────────────────────────────┘   │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+┌───────────────────────────┼─────────────────────────────────┐
+│                    Skill Layer (54 Skills)                   │
+│  Built-in Skills │ User Skills │ Skill Registry (clawhub)   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 技术亮点 - 对 Kirin 的参考价值
+
+| 设计模式 | OpenClaw 实现 | Kirin 应用场景 |
+|----------|---------------|----------------|
+| **多通道统一抽象** | 43 个消息通道统一接口 | 手机/平板/车机跨设备消息同步 |
+| **插件热加载** | 运行时技能安装/更新 | 系统功能免重启更新 |
+| **本地向量检索** | sqlite-vec + LanceDB | 端侧 AI 记忆系统 |
+| **ACP 协议** | Agent Client Protocol | 分布式 Agent 协作标准 |
+| **mDNS 设备发现** | @homebridge/ciao | 近场设备自动发现配对 |
+
+#### 高性能技术栈
+
+| 组件 | 选型 | 性能亮点 |
+|------|------|----------|
+| **构建** | tsdown | 比 tsc 快 10x+ |
+| **图像处理** | sharp (libvips) | 原生 C 加速 |
+| **本地 LLM** | node-llama-cpp | 支持 NPU 加速潜力 |
+| **HTTP 客户端** | undici | HTTP/2 + 连接池优化 |
+| **向量存储** | sqlite-vec | 纯 SQLite 实现，无需额外服务 |
+
+#### 扩展系统 (43 Extensions)
+
+按技术类型分类：
+
+| 类型 | 扩展示例 | 技术深度 |
+|------|----------|----------|
+| **即时通讯** | discord, telegram, signal, feishu, whatsapp | 协议逆向、E2E 加密 |
+| **企业协作** | msteams, slack, mattermost | Graph API、Webhook |
+| **语音通话** | voice-call | WebRTC + Opus + ICE 穿透 |
+| **设备配对** | device-pair | mDNS/Bonjour 服务发现 |
+| **记忆系统** | memory-core, memory-lancedb | 向量 RAG、本地优先 |
+
+#### 安全设计参考
+
+- **Signal Protocol**: 端到端加密实现 (`extensions/signal`)
+- **设备配对**: mDNS + 密钥交换 (`extensions/device-pair`)
+- **沙箱隔离**: 技能运行时隔离
+
+#### 源码关键路径
+
+```
+openclaw/
+├── src/
+│   ├── gateway/      # 网关核心 - 消息路由
+│   ├── agent/        # Agent 运行时
+│   ├── protocol/     # ACP 协议实现
+│   └── daemon/       # 守护进程
+├── extensions/       # 43 个通道扩展
+├── skills/           # 54 个内置技能
+├── apps/
+│   ├── ios/          # Swift + SwiftUI
+│   ├── android/      # Kotlin + Compose
+│   └── macos/        # Swift + AppKit
+└── docs/             # Mintlify 文档
+```
+
+#### 对 Kirin 平台的具体启示
+
+**调度优化参考**:
+- 消息队列设计可优化 EAS 任务分发
+- TUI 低功耗模式可借鉴终端场景调度
+- 多进程通信模式可优化 Binder 调用
+
+**功耗优化参考**:
+- 本地 LLM 推理的 CPU/GPU 负载均衡
+- WebSocket 长连接的休眠策略
+- 插件按需加载减少内存占用
+
+**安全设计参考**:
+- 设备配对流程可作为 TrustZone 参考
+- E2E 加密实现可借鉴到安全通信
+
+**AI 能力参考**:
+- 端侧 LLM + 向量检索架构
+- NPU 调度策略优化
+- 本地优先的 AI 设计理念
+
+---
+
 ## 工具与模拟器
 
 ### 模拟器
@@ -263,7 +378,7 @@
 
 ## 📅 更新日志
 
-- **2026-03-12**: 初始化仓库，完成基础分类
+- **2026-03-12**: 添加 OpenClaw 软件架构参考，包含 43 扩展 + 54 技能深度分析
 
 ---
 
