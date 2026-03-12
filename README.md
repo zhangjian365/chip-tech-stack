@@ -38,6 +38,23 @@
 - **电源管理**: `kernel/power/` - suspend, hibernate
 - **内存管理**: `mm/` - 内存分配, 页面管理
 
+### 🔥 核心技术价值
+
+> **PELT (Per-Entity Load Tracking)** - `kernel/sched/pelt.h`
+> - 数学模型: L(t) = L(t-1) * y + R * (1-y)，衰减系数 y=0.978572
+> - 负载计算预表: `runnable_avg_yN_inv[32]` 用于快速计算
+> - **Kirin 价值**: 精准负载预测 + 任务大小核放置决策
+
+> **Schedutil Governor** - `kernel/sched/cpufreq_schedutil.c`
+> - 调度器直接驱动调频，取代传统定时采样
+> - 关键机制: IOWait Boost (IO 唤醒时临时提频)
+> - **Kirin 价值**: 游戏/交互场景响应加速
+
+> **Thermal Governor** - `drivers/thermal/gov_power_allocator.c`
+> - PID 控制器动态功耗预算分配
+> - 支持 CPU/GPU 多设备协同降温
+> - **Kirin 价值**: 场景化温控策略参考
+
 ### 内核新特性跟踪
 
 | 项目 | Stars | 说明 |
@@ -65,6 +82,14 @@
 - **BL32**: Secure-EL1 Payload (OP-TEE)
 - **BL33**: Non-trusted Firmware (U-Boot/UEFI)
 
+### 🔥 核心技术价值
+
+> **BL31 EL3 运行时** - `bl31/bl31_main.c`
+> - PSCI 接口: CPU 上电/下电、系统挂起/恢复
+> - SMC 调用: 安全世界/非安全世界切换
+> - Context Management: CPU 上下文保存/恢复
+> - **Kirin 价值**: 低功耗状态管理 + TrustZone 接口标准化
+
 ---
 
 ## ARM 架构与指令集
@@ -90,6 +115,19 @@
 | 项目 | Stars | 说明 |
 |------|-------|------|
 | [simd-everywhere/simde](https://github.com/simd-everywhere/simde) | ⭐2.9K | SIMD 指令集跨平台实现 |
+
+### 🔥 核心技术价值
+
+> **ARM optimized-routines** - `string/aarch64/memcpy.S`
+> - 三档分级策略: 0-32B / 32-128B / 128B+
+> - 大拷贝: NEON 64B/iteration 软件流水线
+> - ldp/stp 指令对最大化内存带宽
+> - **Kirin 价值**: 相机数据拷贝/AI模型加载/图形缓冲区优化
+
+> **ComputeLibrary** - `ARM-software/ComputeLibrary`
+> - NEON 优化数学函数 (GEMM/Convolution)
+> - GPU Mali 驱动层优化
+> - **Kirin 价值**: NPU/GPU 协同计算参考
 
 ---
 
@@ -147,6 +185,23 @@
 | 项目 | Stars | 说明 |
 |------|-------|------|
 | [auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq) | ⭐7.4K | 用户态自动调频 |
+
+### 🔥 核心技术价值
+
+> **EAS (Energy Aware Scheduling)** - `kernel/sched/energy.c`
+> - 基于 CPU 算力模型计算任务放置能耗
+> - 异构系统 (big.LITTLE) 任务分发核心算法
+> - **Kirin 价值**: 簇间任务迁移决策 + 能耗模型校准
+
+> **TEO Governor** - cpuidle TEO (Timer Events Oriented)
+> - 6.6+ 新增，替代传统 menu governor
+> - 预测下一个 wakeup 事件，优化空闲状态选择
+> - **Kirin 价值**: 待机功耗优化
+
+> **iowait_boost** - `kernel/sched/cpufreq_schedutil.c`
+> - IO 等待唤醒时临时提升频率
+> - 减少 IO 完成事件延迟
+> - **Kirin 价值**: 游戏加载/文件操作响应加速
 
 ---
 
@@ -207,6 +262,19 @@
 - **Secure Boot**: 安全启动链
 - **Keymaster**: 密钥管理
 - **Gatekeeper**: 认证管理
+
+### 🔥 核心技术价值
+
+> **OP-TEE** - `OP-TEE/optee_os`
+> - 开源 TEE OS，运行在 BL32 (Secure-EL1)
+> - GlobalPlatform API 标准接口
+> - 可信应用 (TA) 隔离执行环境
+> - **Kirin 价值**: 安全支付/指纹/DRM 参考实现
+
+> **Secure Boot Chain**
+> - BL1 → BL2 → BL31 → BL33 逐级验证
+> - 签名验签 + 哈希校验
+> - **Kirin 价值**: 启动安全 + 防回滚机制
 
 ---
 
@@ -378,7 +446,11 @@ openclaw/
 
 ## 📅 更新日志
 
-- **2026-03-12**: 添加 OpenClaw 软件架构参考，包含 43 扩展 + 54 技能深度分析
+- **2026-03-12**: 添加各项目深度技术分析
+  - Linux 内核: PELT/Schedutil/Thermal 核心价值
+  - ATF: BL31 PSCI/SMC 架构分析
+  - ARM 库: NEON memcpy 优化机制
+  - 安全: OP-TEE/Secure Boot 参考
 
 ---
 
