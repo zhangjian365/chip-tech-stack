@@ -440,7 +440,7 @@ openclaw/
 - **高通**: Snapdragon 8 Elite Gen 5 (Oryon 架构, AI 调度)
 - **联发科**: 天玑 9500 (All Big Core, CorePilot 7.0)
 - **苹果**: A20 (2nm, WMCM 封装)
-- **华为**: 潜在平台 (自主调度优化)
+**潜在平台**: 自主调度优化 (自主调度优化)
 
 ---
 
