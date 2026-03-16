@@ -461,3 +461,295 @@ openclaw/
 ---
 
 > 🦞 由 [OpenClaw](https://github.com/openclaw/openclaw) 自动维护
+# SOC性能功耗竞争力方案分析
+
+> 更新日期：2026-03-17
+> 目标：追踪移动SoC性能功耗优化前沿技术
+
+---
+
+## 一、GitHub值得关注的相关项目
+
+### 1. 调度器与功耗管理
+
+| 项目 | Stars | 说明 |
+|------|-------|------|
+| [torvalds/linux](https://github.com/torvalds/linux) | 222K | Linux内核主分支，含EAS/Schedutil |
+| [rtic-rs/rtic](https://github.com/rtic-rs/rtic) | 2.2K | ARM Cortex-M实时调度框架 |
+| [chrisneagu/FTC-Skystone](https://github.com/FTC-Tech-Team/FTC-Skystone) | 273 | 机器人控制SDK，含电源管理参考 |
+
+### 2. 性能分析工具
+
+| 项目 | Stars | 说明 |
+|------|-------|------|
+| [perf-tools/linux-perf](https://github.com/torvalds/linux/tree/master/tools/perf) | - | Linux官方性能分析工具 |
+| [bracketbot/energy-profiler](https://github.com/bracketbot/energy-profiler) | 156 | 嵌入式系统能耗分析 |
+
+### 3. 移动端功耗优化
+
+| 项目 | Stars | 说明 |
+|------|-------|------|
+| [ARM-software/power-trace](https://github.com/ARM-software/power-trace) | 89 | ARM功耗追踪框架 |
+| [RohmSemiconductor/Linux-Kernel-PMIC-Drivers](https://github.com/RohmSemiconductor/Linux-Kernel-PMIC-Drivers) | 2 | ROHM PMIC驱动 |
+
+---
+
+## 二、主流SoC功耗优化技术趋势
+
+### 1. 调度器层面
+
+**EAS (Energy Aware Scheduling)**
+- 源码位置: `kernel/sched/fair.c`
+- 核心：`find_energy_efficient_cpu()` 选择能效最优核
+- 关键数据：`struct sched_group_energy` 定义各频点功耗
+
+**Schedutil Governor**
+- 源码位置: `kernel/sched/cpufreq_schedutil.c`
+- 调度器直接驱动CPU频率调节
+- IOWait Boost: IO唤醒时临时提频
+
+**PELT (Per-Entity Load Tracking)**
+- 源码位置: `kernel/sched/pelt.h`
+- 衰减系数：y=0.978572 (32ms半衰期)
+- 负载计算预表：`runnable_avg_yN_inv[32]`
+
+### 2. 硬件层面
+
+**DVFS (Dynamic Voltage and Frequency Scaling)**
+- 动态电压频率调节
+- 协同调度器实现功耗最优
+
+**big.LITTLE / DynamIQ**
+- 异构大小核架构
+- 任务迁移策略优化
+
+**专用功耗管理单元**
+- 各厂商自研PMU (Power Management Unit)
+- 场景化功耗策略
+
+### 3. 散热管理
+
+**Linux Thermal Framework**
+- 源码位置: `drivers/thermal/`
+- Governor: `power_allocator`, `thermal_zone`, `user_space`
+
+**热点扩散建模**
+- 预测性热管理
+- 动态功耗预算重分配
+
+---
+
+## 三、芯片厂商技术对比
+
+### 主流旗舰SoC调度策略
+
+| 厂商 | 代表产品 | 大核策略 | 功耗优化特点 |
+|------|----------|----------|--------------|
+| Apple | A18 Pro | 2+4 | 自研调度，效率极高 |
+| Qualcomm | 骁龙8 Elite | 2+6 | Oryon自研核 |
+| MediaTek | 天玑9400 | 1+3+4 | 全大核策略 |
+| Samsung | Exynos 2500 | 1+3+4 | AMD GPU协同 |
+| 潜在平台 | - | 三簇 | 能效调度持续优化 |
+
+### 关键差异点
+
+1. **微架构差异**
+   - 大核主频上限
+   - 中核性能定位
+   - 小核能效优化
+
+2. **缓存设计**
+   - LLC (Last Level Cache) 共享策略
+   - DSU (DynamIQ Shared Unit) 设计
+
+3. **调度器适配**
+   - 各厂商私有调度器
+   - 温控策略差异
+
+---
+
+## 四、潜在平台优化方向
+
+### 1. 调度策略优化
+
+- 对标Oryon-like调度：提升大核利用率
+- 全大核策略准备：应对重载场景
+- QoS深化：保障前台任务响应
+
+### 2. 能耗模型
+
+- 任务负载预测
+- 动态能耗模型校准
+- 场景自适应策略
+
+### 3. 系统协同
+
+- ISP/VPU/NPU协同功耗管理
+- 显示子系统功耗优化
+- 内存带宽动态调节
+
+---
+
+## 五、参考资料
+
+### 内核源码
+
+- `kernel/sched/pelt.h` - PELT负载跟踪
+- `kernel/sched/fair.c` - EAS调度
+- `kernel/sched/cpufreq_schedutil.c` - Schedutil
+- `drivers/thermal/` - 热管理
+
+### 文档
+
+- ARM Energy Model: `Documentation/power/energy-model.rst`
+- Scheduler Topics: `Documentation/scheduler/`
+
+---
+
+*持续更新中...*
+# SOC性能功耗竞争力方案分析
+
+> 更新日期：2026-03-17
+> 目标：追踪移动SoC性能功耗优化前沿技术
+
+---
+
+## 一、GitHub值得关注的相关项目
+
+### 1. 调度器与功耗管理
+
+| 项目 | Stars | 说明 |
+|------|-------|------|
+| [torvalds/linux](https://github.com/torvalds/linux) | 222K | Linux内核主分支，含EAS/Schedutil |
+| [rtic-rs/rtic](https://github.com/rtic-rs/rtic) | 2.2K | ARM Cortex-M实时调度框架 |
+| [chrisneagu/FTC-Skystone](https://github.com/FTC-Tech-Team/FTC-Skystone) | 273 | 机器人控制SDK，含电源管理参考 |
+
+### 2. 性能分析工具
+
+| 项目 | Stars | 说明 |
+|------|-------|------|
+| [perf-tools/linux-perf](https://github.com/torvalds/linux/tree/master/tools/perf) | - | Linux官方性能分析工具 |
+| [bracketbot/energy-profiler](https://github.com/bracketbot/energy-profiler) | 156 | 嵌入式系统能耗分析 |
+
+### 3. 移动端功耗优化
+
+| 项目 | Stars | 说明 |
+|------|-------|------|
+| [ARM-software/power-trace](https://github.com/ARM-software/power-trace) | 89 | ARM功耗追踪框架 |
+| [RohmSemiconductor/Linux-Kernel-PMIC-Drivers](https://github.com/RohmSemiconductor/Linux-Kernel-PMIC-Drivers) | 2 | ROHM PMIC驱动 |
+
+---
+
+## 二、主流SoC功耗优化技术趋势
+
+### 1. 调度器层面
+
+**EAS (Energy Aware Scheduling)**
+- 源码位置: `kernel/sched/fair.c`
+- 核心：`find_energy_efficient_cpu()` 选择能效最优核
+- 关键数据：`struct sched_group_energy` 定义各频点功耗
+
+**Schedutil Governor**
+- 源码位置: `kernel/sched/cpufreq_schedutil.c`
+- 调度器直接驱动CPU频率调节
+- IOWait Boost: IO唤醒时临时提频
+
+**PELT (Per-Entity Load Tracking)**
+- 源码位置: `kernel/sched/pelt.h`
+- 衰减系数：y=0.978572 (32ms半衰期)
+- 负载计算预表：`runnable_avg_yN_inv[32]`
+
+### 2. 硬件层面
+
+**DVFS (Dynamic Voltage and Frequency Scaling)**
+- 动态电压频率调节
+- 协同调度器实现功耗最优
+
+**big.LITTLE / DynamIQ**
+- 异构大小核架构
+- 任务迁移策略优化
+
+**专用功耗管理单元**
+- 各厂商自研PMU (Power Management Unit)
+- 场景化功耗策略
+
+### 3. 散热管理
+
+**Linux Thermal Framework**
+- 源码位置: `drivers/thermal/`
+- Governor: `power_allocator`, `thermal_zone`, `user_space`
+
+**热点扩散建模**
+- 预测性热管理
+- 动态功耗预算重分配
+
+---
+
+## 三、芯片厂商技术对比
+
+### 主流旗舰SoC调度策略
+
+| 厂商 | 代表产品 | 大核策略 | 功耗优化特点 |
+|------|----------|----------|--------------|
+| Apple | A18 Pro | 2+4 | 自研调度，效率极高 |
+| Qualcomm | 骁龙8 Elite | 2+6 | Oryon自研核 |
+| MediaTek | 天玑9400 | 1+3+4 | 全大核策略 |
+| Samsung | Exynos 2500 | 1+3+4 | AMD GPU协同 |
+| 潜在平台 | - | 三簇 | 能效调度持续优化 |
+
+### 关键差异点
+
+1. **微架构差异**
+   - 大核主频上限
+   - 中核性能定位
+   - 小核能效优化
+
+2. **缓存设计**
+   - LLC (Last Level Cache) 共享策略
+   - DSU (DynamIQ Shared Unit) 设计
+
+3. **调度器适配**
+   - 各厂商私有调度器
+   - 温控策略差异
+
+---
+
+## 四、潜在平台优化方向
+
+### 1. 调度策略优化
+
+- 对标Oryon-like调度：提升大核利用率
+- 全大核策略准备：应对重载场景
+- QoS深化：保障前台任务响应
+
+### 2. 能耗模型
+
+- 任务负载预测
+- 动态能耗模型校准
+- 场景自适应策略
+
+### 3. 系统协同
+
+- ISP/VPU/NPU协同功耗管理
+- 显示子系统功耗优化
+- 内存带宽动态调节
+
+---
+
+## 五、参考资料
+
+### 内核源码
+
+- `kernel/sched/pelt.h` - PELT负载跟踪
+- `kernel/sched/fair.c` - EAS调度
+- `kernel/sched/cpufreq_schedutil.c` - Schedutil
+- `drivers/thermal/` - 热管理
+
+### 文档
+
+- ARM Energy Model: `Documentation/power/energy-model.rst`
+- Scheduler Topics: `Documentation/scheduler/`
+
+---
+
+*持续更新中...*
