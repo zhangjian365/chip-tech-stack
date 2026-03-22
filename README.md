@@ -12,6 +12,7 @@
 - [编译器与工具链](#编译器与工具链)
 - [调度与功耗优化](#调度与功耗优化)
 - [移动端 AI/ML](#移动端-aiml)
+- [图形技术栈](#图形技术栈)
 - [Android 底层](#android-底层)
 - [安全与 TrustZone](#安全与-trustzone)
 - [软件架构参考](#软件架构参考)
@@ -220,6 +221,116 @@
 - 高通 AI-Assisted Scheduling (8 Elite Gen 2)
 - 联发科 CorePilot 7.0 (天玑 9500)
 - 苹果 Apple Intelligence 调度
+
+---
+
+## 图形技术栈
+
+### 核心仓库
+
+| 项目 | Stars | 说明 |
+|------|-------|------|
+| [Mesa3D/mesa](https://github.com/Mesa3D/mesa) | ⭐5.3K | 开源 GL/Vulkan 实现 |
+| [wayland-project/weston](https://github.com/wayland-project/weston) | ⭐1.5K | Wayland 合成器参考 |
+| [drm_hwcomposer](https://github.com/dinghuang/drm_hwcomposer) | - | Android HWComposer |
+| [ai-games/angle](https://github.com/google/angle) | ⭐7.2K | ANGLE GLES→Vulkan/Metal |
+
+### Linux 图形栈架构
+
+```
+用户空间:  游戏/APP → Wayland → Mesa → DRM
+内核空间:  DRM/KMS → mali_kbase (GPU 驱动)
+```
+
+### 核心组件
+
+| 组件 | 层次 | 作用 |
+|------|------|------|
+| **Wayland** | 协议/合成器 | 替代 X11 的显示服务器协议 |
+| **Mesa** | 用户态驱动 | 开源 GL/Vulkan 实现 |
+| **DRM** | 内核子系统 | 图形资源管理、显示控制 |
+| **KMS** | DRM 子模块 | 显示模式设置、CRTC/Plane |
+| **mali_kbase** | 内核驱动 | ARM Mali GPU 设备驱动 |
+
+### DRM 子系统
+
+**核心数据结构**：
+
+```c
+// drivers/gpu/drm/drm_device.c
+struct drm_device {
+    struct device *dev;
+    struct drm_driver *driver;
+    
+    // KMS 核心对象
+    struct list_head mode_config.crtc_list;
+    struct list_head mode_config.connector_list;
+    struct list_head mode_config.plane_list;
+};
+```
+
+### Mali GPU 驱动架构
+
+```
+应用程序 (Vulkan/GLES)
+         │
+         ▼
+Mesa ICD (用户态)
+         │
+         ▼
+dri/renderD128 (DRM Render Node)
+         │
+         ▼
+mali_kbase (内核驱动)
+    ┌────┴────┐
+    ▼         ▼
+ Job     Memory
+Scheduler Manager
+```
+
+### 零拷贝渲染
+
+**DMA-BUF 共享机制**：
+
+```c
+// Camera → GPU → Display 零拷贝
+// 1. Camera 导出 dmabuf
+int dma_buf_fd = export_dmabuf(camera_buffer);
+
+// 2. DRM import dmabuf → Framebuffer
+drmModeAddFB2(drm_fd, width, height, format, 
+              handles, pitches, offsets, &fb_id, 0);
+
+// 3. 直接显示，无 CPU 拷贝
+drmModeSetCrtc(drm_fd, crtc_id, fb_id, 0, 0, 
+               connector_ids, 1, &mode);
+```
+
+### Mali 架构演进
+
+| 架构 | 关键特性 | 典型设备 |
+|------|----------|----------|
+| **Midgard** | Tile-based 渲染 | Mali-T880 |
+| **Bifrost** | FBDC 压缩 | Mali-G71 |
+| **Valhall** | 128-wide SIMD | Mali-G77 |
+| **Immortalis** | 硬件光追 | Mali-G720 |
+
+### 🔥 核心技术价值
+
+> **DRM/KMS 显示管线** - `drivers/gpu/drm/`
+> - 架构核心: CRTC → Encoder → Connector 驱动模型
+> - 原子更新: drm_atomic_commit 实现无闪烁切换
+> - **潜在平台价值**: 车载显示/多屏异显/Always-On
+
+> **Mali GPU 驱动** - `drivers/gpu/arm/mali_bifrost/`
+> - Job Scheduler: GPU 作业调度与依赖管理
+> - Memory Manager: 页表管理与 TLB 刷新
+> - **潜在平台价值**: 游戏渲染/AI 推理加速/视频编解码
+
+> **零拷贝显示** - DMA-BUF
+> - 跨设备缓冲共享: Camera → GPU → Display
+> - 无 CPU 参与的数据搬运
+> - **潜在平台价值**: 视频预览/屏幕录制/多路编解码
 
 ---
 
