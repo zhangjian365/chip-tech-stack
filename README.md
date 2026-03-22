@@ -12,6 +12,7 @@
 - [编译器与工具链](#编译器与工具链)
 - [调度与功耗优化](#调度与功耗优化)
 - [移动端 AI/ML](#移动端-aiml)
+- [Camera 技术栈](#camera-技术栈)
 - [图形技术栈](#图形技术栈)
 - [Android 底层](#android-底层)
 - [安全与 TrustZone](#安全与-trustzone)
@@ -221,6 +222,88 @@
 - 高通 AI-Assisted Scheduling (8 Elite Gen 2)
 - 联发科 CorePilot 7.0 (天玑 9500)
 - 苹果 Apple Intelligence 调度
+
+---
+
+## Camera 技术栈
+
+### 核心仓库
+
+| 项目 | Stars | 说明 |
+|------|-------|------|
+| [msm_media_driver](https://github.com/andersson/msm_media_driver) | ⭐1.2K | 高通视频驱动 |
+| [mediatek_camera](https://github.com/mediatek-labs/blocklyduino-for-linkit) | - | 联发科 Camera |
+
+### Linux V4L2 子系统
+
+```
+用户空间: Camera2 API → HAL → V4L2 Driver
+内核空间: V4L2 → Sensor/ISP 驱动
+```
+
+### 核心组件
+
+| 组件 | 作用 |
+|------|------|
+| **V4L2** | 视频设备驱动框架 |
+| **Camera HAL3** | 统一 HAL 接口标准 |
+| **ISP** | 图像信号处理 (Demosaic/AWB/AEC) |
+| **Sensor** | 图像传感器 (RAW 数据输出) |
+| **DMA-BUF** | 零拷贝缓冲共享 |
+
+### V4L2 Buffer 管理
+
+```c
+// DMABUF 零拷贝 (关键!)
+#define V4L2_MEMORY_DMABUF 4  // 通过 fd 共享
+
+// 导出 dmabuf fd
+struct v4l2_exportbuffer expbuf = {0};
+expbuf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+expbuf.index = buffer_index;
+ioctl(v4l2_fd, VIDIOC_EXPBUF, &expbuf);  // 获取 fd
+
+// DRM import 显示 (零拷贝!)
+drmModeSetCrtc(drm_fd, crtc_id, fb_id, ...);
+```
+
+### ISP Pipeline
+
+```
+Sensor RAW → BLC → Demosaic → AWB → AEC → 降噪 → 锐化 → Gamma → YUV
+```
+
+### 功耗优化策略
+
+| 场景 | 帧率 | 典型功耗 |
+|------|------|----------|
+| 预览 | 30fps | 300-500mW |
+| 4K视频 | 30fps | 1.5-2.5W |
+| 夜景模式 | 15fps | 1-1.5W |
+
+**优化手段**：
+- 帧率动态调整 (20-40% 降低)
+- 传感器低功耗模式 (50-70% 降低)
+- DDR 硬件压缩 (20-30% 降低)
+- ISP/VPU/NPU 协同调度
+
+### 🔥 核心技术价值
+
+> **V4L2 子系统** - `drivers/media/`
+> - Video/Media/Subdev 驱动模型
+> - DMABUF 零拷贝机制
+> - **潜在平台价值**: Camera驱动定制/多摄协同
+
+> **Camera HAL3**
+> - 统一 HAL 接口标准
+> - 计算摄影流水线
+> - **潜在平台价值**: 相机效果定制/算法优化
+
+> **功耗优化**
+> - 帧率/分辨率动态调整
+> - 传感器低功耗模式
+> - ISP/VPU/NPU 协同调度
+> - **潜在平台价值**: 续航提升/发热控制
 
 ---
 
