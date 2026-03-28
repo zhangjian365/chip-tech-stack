@@ -601,7 +601,7 @@ openclaw/
 |------|-------|------|
 | [capstone-engine/capstone](https://github.com/capstone-engine/capstone) | ⭐8.5K | 反汇编框架 |
 | [keystone-engine/keystone](https://github.com/keystone-engine/keystone) | - | 汇编框架 |
-
+| https://asahilinux.org/docs/platform/feature-support/m1/#m1-devices //苹果M1系列功耗优化分析
 ### 调试工具
 
 | 项目 | Stars | 说明 |
